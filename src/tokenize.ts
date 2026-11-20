@@ -4,13 +4,18 @@ const STOPWORDS = new Set([
   "please", "can", "could", "would", "should", "will", "do", "does",
 ]);
 
-function stem(token: string): string {
+function stripSuffix(token: string): string {
   if (token.length > 5 && token.endsWith("ies")) return `${token.slice(0, -3)}y`;
   if (token.length > 5 && token.endsWith("ing")) return token.slice(0, -3);
   if (token.length > 4 && token.endsWith("ed")) return token.slice(0, -2);
   if (token.length > 4 && token.endsWith("es") && /(ss|sh|ch|x|z)es$/.test(token)) return token.slice(0, -2);
   if (token.length > 3 && token.endsWith("s") && !token.endsWith("ss")) return token.slice(0, -1);
   return token;
+}
+
+function stem(token: string): string {
+  const stripped = stripSuffix(token);
+  return stripped.length > 3 && stripped.endsWith("e") ? stripped.slice(0, -1) : stripped;
 }
 
 export function tokenize(text: string): string[] {
