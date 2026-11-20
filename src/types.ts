@@ -43,3 +43,11 @@ export interface ScoredTool {
   tool: Tool;
   score: number;
 }
+
+export interface RankerIndex {
+  score(query: string): Promise<readonly number[]> | readonly number[];
+}
+
+export interface Ranker {
+  build(tools: readonly Tool[]): Promise<RankerIndex> | RankerIndex;
+}
