@@ -1,25 +1,6 @@
-import type { Embedder, Ranker, RankerIndex, Tool } from "../types.js";
-
-function toolText(tool: Tool): string {
-  const params = Object.entries(tool.inputSchema.properties ?? {}).map(([key, schema]) =>
-    schema.description ? `${key}: ${schema.description}` : key,
-  );
-  return [tool.name, tool.description, ...params].filter(Boolean).join("\n");
-}
-
-function cosine(a: readonly number[], b: readonly number[]): number {
-  let dot = 0;
-  let normA = 0;
-  let normB = 0;
-  for (let i = 0; i < a.length; i++) {
-    const x = a[i] ?? 0;
-    const y = b[i] ?? 0;
-    dot += x * y;
-    normA += x * x;
-    normB += y * y;
-  }
-  return normA === 0 || normB === 0 ? 0 : dot / Math.sqrt(normA * normB);
-}
+import { toolText } from "../document.js";
+import { cosine } from "../scoring.js";
+import type { Embedder, Ranker, RankerIndex } from "../types.js";
 
 async function embedAll(embedder: Embedder, texts: string[]): Promise<number[][]> {
   if (texts.length === 0) return [];
