@@ -51,3 +51,7 @@ export interface RankerIndex {
 export interface Ranker {
   build(tools: readonly Tool[]): Promise<RankerIndex> | RankerIndex;
 }
+
+export interface Embedder {
+  embed(texts: string[]): Promise<number[][]>;
+}

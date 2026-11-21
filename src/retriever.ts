@@ -1,7 +1,9 @@
 import { normalizeTools } from "./normalize.js";
 import { bm25Ranker } from "./rankers/bm25.js";
+import { hybridRanker } from "./rankers/hybrid.js";
+import { semanticRanker } from "./rankers/semantic.js";
 import { toRegistry } from "./registries/array.js";
-import type { Ranker, RankerIndex, ScoredTool, Tool, ToolDefinition, ToolRegistry } from "./types.js";
+import type { Embedder, Ranker, RankerIndex, ScoredTool, Tool, ToolDefinition, ToolRegistry } from "./types.js";
 
 export type ToolPin = string | ((tool: Tool) => boolean);
 
@@ -10,6 +12,8 @@ export interface ToolRetrieverOptions {
   topK?: number;
   alwaysInclude?: readonly ToolPin[];
   ranker?: Ranker;
+  embedder?: Embedder;
+  semanticWeight?: number;
   minScore?: number;
 }
 
@@ -44,6 +48,14 @@ function resolvePins(tools: readonly Tool[], pins: readonly ToolPin[]): Set<stri
   return pinned;
 }
 
+function defaultRanker({ embedder, semanticWeight = 0.5 }: ToolRetrieverOptions): Ranker {
+  if (!embedder) return bm25Ranker();
+  return hybridRanker([
+    { ranker: bm25Ranker(), weight: 1 - semanticWeight },
+    { ranker: semanticRanker(embedder), weight: semanticWeight },
+  ]);
+}
+
 export class ToolRetriever {
   readonly #registry: ToolRegistry;
   readonly #ranker: Ranker;
@@ -55,7 +67,7 @@ export class ToolRetriever {
 
   constructor(options: ToolRetrieverOptions) {
     this.#registry = toRegistry(options.registry);
-    this.#ranker = options.ranker ?? bm25Ranker();
+    this.#ranker = options.ranker ?? defaultRanker(options);
     this.#topK = assertTopK(options.topK ?? 3);
     this.#pins = options.alwaysInclude ?? [];
     this.#minScore = options.minScore ?? 0;
