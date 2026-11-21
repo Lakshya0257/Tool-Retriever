@@ -1,6 +1,14 @@
 export { normalizeTool, normalizeTools } from "./normalize.js";
 export { bm25Ranker, type Bm25Options } from "./rankers/bm25.js";
 export { arrayRegistry } from "./registries/array.js";
+export { combineRegistries } from "./registries/combine.js";
+export {
+  mcpRegistry,
+  type McpClientLike,
+  type McpListToolsResult,
+  type McpRegistryOptions,
+  type McpToolLike,
+} from "./registries/mcp.js";
 export { ToolRetriever, type SelectOptions, type ToolPin, type ToolRetrieverOptions } from "./retriever.js";
 export { tokenize } from "./tokenize.js";
 export type {
