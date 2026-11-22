@@ -16,7 +16,11 @@ const names = (list: { name: string }[]) => list.map((tool) => tool.name);
 
 describe("semanticRanker", () => {
   it("finds tools that share meaning but not words with the query", async () => {
-    const retriever = new ToolRetriever({ registry: definitions, ranker: semanticRanker(conceptEmbedder()), topK: 1 });
+    const retriever = new ToolRetriever({
+      registry: definitions,
+      ranker: semanticRanker(conceptEmbedder()),
+      topK: 1,
+    });
     expect(names(await retriever.select("do I need an umbrella"))).toEqual(["get_weather"]);
     expect(names(await retriever.select("ping my colleague"))).toEqual(["send_email"]);
   });
@@ -105,8 +109,8 @@ describe("ToolRetriever with an embedder", () => {
   });
 
   it("rejects a semanticWeight outside 0..1", () => {
-    expect(() => new ToolRetriever({ registry: [], embedder: conceptEmbedder(), semanticWeight: 1.5 })).toThrow(
-      RangeError,
-    );
+    expect(
+      () => new ToolRetriever({ registry: [], embedder: conceptEmbedder(), semanticWeight: 1.5 }),
+    ).toThrow(RangeError);
   });
 });

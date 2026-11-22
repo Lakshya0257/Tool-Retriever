@@ -1,8 +1,7 @@
-const STOPWORDS = new Set([
-  "a", "an", "and", "are", "as", "at", "be", "by", "for", "from", "in", "into", "is", "it",
-  "of", "on", "or", "that", "the", "this", "to", "with", "me", "my", "i", "you", "your",
-  "please", "can", "could", "would", "should", "will", "do", "does",
-]);
+const STOPWORDS = new Set(
+  `a an and are as at be by for from in into is it of on or that the this to with
+  me my i you your please can could would should will do does`.split(/\s+/),
+);
 
 function stripSuffix(token: string): string {
   if (token.length > 5 && token.endsWith("ies")) return `${token.slice(0, -3)}y`;

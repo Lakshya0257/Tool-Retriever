@@ -37,7 +37,9 @@ const githubPages: McpListToolsResult[] = [
     nextCursor: "1",
   },
   {
-    tools: [{ name: "list_commits", inputSchema: { type: "object", properties: { branch: { type: "string" } } } }],
+    tools: [
+      { name: "list_commits", inputSchema: { type: "object", properties: { branch: { type: "string" } } } },
+    ],
   },
 ];
 
@@ -68,7 +70,10 @@ describe("mcpRegistry", () => {
   });
 
   it("stops when a server repeats a cursor", async () => {
-    const client = mockClient([{ tools: [], nextCursor: "1" }, { tools: [], nextCursor: "1" }]);
+    const client = mockClient([
+      { tools: [], nextCursor: "1" },
+      { tools: [], nextCursor: "1" },
+    ]);
     expect(await mcpRegistry(client).list()).toEqual([]);
     expect(client.listTools).toHaveBeenCalledTimes(2);
   });

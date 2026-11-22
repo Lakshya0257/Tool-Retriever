@@ -3,7 +3,15 @@ import { bm25Ranker } from "./rankers/bm25.js";
 import { hybridRanker } from "./rankers/hybrid.js";
 import { semanticRanker } from "./rankers/semantic.js";
 import { toRegistry } from "./registries/array.js";
-import type { Embedder, Ranker, RankerIndex, ScoredTool, Tool, ToolDefinition, ToolRegistry } from "./types.js";
+import type {
+  Embedder,
+  Ranker,
+  RankerIndex,
+  ScoredTool,
+  Tool,
+  ToolDefinition,
+  ToolRegistry,
+} from "./types.js";
 
 export type ToolPin = string | ((tool: Tool) => boolean);
 
@@ -103,9 +111,7 @@ export class ToolRetriever {
     if (scores.length !== tools.length) {
       throw new Error(`Ranker returned ${scores.length} scores for ${tools.length} tools`);
     }
-    return tools
-      .map((tool, i) => ({ tool, score: scores[i] ?? 0 }))
-      .sort((a, b) => b.score - a.score);
+    return tools.map((tool, i) => ({ tool, score: scores[i] ?? 0 })).sort((a, b) => b.score - a.score);
   }
 
   #load(): Promise<Index> {

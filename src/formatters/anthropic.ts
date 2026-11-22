@@ -7,5 +7,9 @@ export interface AnthropicTool {
 }
 
 export function toAnthropicTools(tools: readonly Tool[]): AnthropicTool[] {
-  return tools.map(({ name, description, inputSchema }) => ({ name, description, input_schema: inputSchema }));
+  return tools.map(({ name, description, inputSchema }) => ({
+    name,
+    description,
+    input_schema: inputSchema,
+  }));
 }
