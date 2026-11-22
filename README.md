@@ -129,9 +129,6 @@ Helpers:
 | `bm25Ranker(options?)`                      | Keyword ranker with tunable `k1`, `b` and `fieldWeights`. |
 | `semanticRanker(embedder)`                  | Embedding ranker.                                         |
 | `hybridRanker([{ ranker, weight }, ...])`   | Weighted blend of any rankers.                            |
-| `toOpenAITools(tools)`                      | Chat Completions format.                                  |
-| `toOpenAIResponsesTools(tools)`             | Responses API format.                                     |
-| `toAnthropicTools(tools)`                   | Messages API format.                                      |
 
 ## Roadmap
 
