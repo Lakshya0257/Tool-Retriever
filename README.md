@@ -49,6 +49,32 @@ const result = streamText({
 - If there is no user text, `prepareStep` returns nothing and all tools stay active.
 - Returned names are typed as keys of your tool set. Tested against AI SDK 7.
 
+### Tool search mid-turn
+
+Retrieval from the user message picks the starting set. When the model discovers halfway through a turn that it needs something else, give it a `search_tools` tool so it can ask for more:
+
+```ts
+import { activeToolsStep, aiSdkRegistry, searchToolsTool, ToolRetriever } from "tool-retriever";
+
+const retriever = new ToolRetriever({ registry: aiSdkRegistry(tools), topK: 3 });
+const allTools = { ...tools, search_tools: searchToolsTool(retriever) };
+
+streamText({
+  model,
+  tools: allTools,
+  messages,
+  stopWhen: stepCountIs(10),
+  prepareStep: activeToolsStep(retriever, allTools, { searchTool: "search_tools" }),
+});
+```
+
+1. Step 1 starts with the tools retrieved from the user message, plus `search_tools`.
+2. The model calls `search_tools({ query: "schedule a meeting" })` and gets back matching names and descriptions.
+3. From the next step on, those tools are active. They stay active for the rest of the turn, newest search first, capped by `maxSearchedTools` (default `10`).
+4. A new `generateText` or `streamText` call starts from a fresh retrieval.
+
+`search_tools` itself is always active and costs one small schema. Pinned tools never show up in its results because they are already active. Index `tools`, not `allTools`, so the search tool never finds itself.
+
 ### Any other loop
 
 ```ts
@@ -126,32 +152,34 @@ The retriever decides what's relevant, never what's allowed. Authorization still
 
 ## API
 
-| Member                                     | Description                                                                                                                                         |
-| ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `new ToolRetriever(options)`               | `registry` (array or `ToolRegistry`), `topK = 3`, `alwaysInclude = []`, plus optional `embedder`, `semanticWeight = 0.5`, `ranker`, `minScore = 0`. |
-| `await retriever.select(query, { topK? })` | The top-k tools with a score above `minScore`, followed by every `alwaysInclude` tool.                                                              |
-| `await retriever.rank(query)`              | Every tool with its score, best first. Useful for debugging and evaluation.                                                                         |
-| `await retriever.tools()`                  | All indexed tools, normalized to `{ name, description, inputSchema, annotations? }`.                                                                |
-| `await retriever.refresh()`                | Rebuilds the index from the registry. If the rebuild fails, the previous index stays in use.                                                        |
+| Member                                                     | Description                                                                                                                                         |
+| ---------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `new ToolRetriever(options)`                               | `registry` (array or `ToolRegistry`), `topK = 3`, `alwaysInclude = []`, plus optional `embedder`, `semanticWeight = 0.5`, `ranker`, `minScore = 0`. |
+| `await retriever.select(query, { topK?, includePinned? })` | The top-k tools with a score above `minScore`, followed by every `alwaysInclude` tool unless `includePinned` is `false`.                            |
+| `await retriever.rank(query)`                              | Every tool with its score, best first. Useful for debugging and evaluation.                                                                         |
+| `await retriever.tools()`                                  | All indexed tools, normalized to `{ name, description, inputSchema, annotations? }`.                                                                |
+| `await retriever.refresh()`                                | Rebuilds the index from the registry. If the rebuild fails, the previous index stays in use.                                                        |
 
 Helpers:
 
-| Export                                          | Description                                                |
-| ----------------------------------------------- | ---------------------------------------------------------- |
-| `aiSdkRegistry(tools, { toJsonSchema? })`       | Indexes a Vercel AI SDK tool set.                          |
-| `activeToolsStep(retriever, tools, { query? })` | A `prepareStep` function that sets `activeTools` per step. |
-| `arrayRegistry(tools)`                          | Wraps a mutable array so `refresh()` picks up changes.     |
-| `mcpRegistry(client, { prefix?, filter? })`     | Lists tools from any MCP client.                           |
-| `combineRegistries(...registries)`              | Merges registries. Duplicate tool names throw.             |
-| `bm25Ranker(options?)`                          | Keyword ranker with tunable `k1`, `b` and `fieldWeights`.  |
-| `semanticRanker(embedder)`                      | Embedding ranker.                                          |
-| `hybridRanker([{ ranker, weight }, ...])`       | Weighted blend of any rankers.                             |
+| Export                                                                          | Description                                                     |
+| ------------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| `aiSdkRegistry(tools, { toJsonSchema? })`                                       | Indexes a Vercel AI SDK tool set.                               |
+| `activeToolsStep(retriever, tools, { query?, searchTool?, maxSearchedTools? })` | A `prepareStep` function that sets `activeTools` per step.      |
+| `searchToolsTool(retriever, { topK?, description? })`                           | An AI SDK tool the model calls to activate more tools mid-turn. |
+| `arrayRegistry(tools)`                                                          | Wraps a mutable array so `refresh()` picks up changes.          |
+| `mcpRegistry(client, { prefix?, filter? })`                                     | Lists tools from any MCP client.                                |
+| `combineRegistries(...registries)`                                              | Merges registries. Duplicate tool names throw.                  |
+| `bm25Ranker(options?)`                                                          | Keyword ranker with tunable `k1`, `b` and `fieldWeights`.       |
+| `semanticRanker(embedder)`                                                      | Embedding ranker.                                               |
+| `hybridRanker([{ ranker, weight }, ...])`                                       | Weighted blend of any rankers.                                  |
 
 ## Roadmap
 
 - [x] Hybrid semantic + keyword ranking
 - [ ] Per-user tool-frequency priors
 - [x] Vercel AI SDK adapter
+- [x] Model-driven tool search mid-turn
 - [ ] LangChain, LlamaIndex and OpenAI Agents adapters
 
 ## Contributing
