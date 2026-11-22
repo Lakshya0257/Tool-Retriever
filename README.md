@@ -1,6 +1,6 @@
 # tool-retriever
 
-[![CI](https://github.com/Lakshya0257/tool-retriever/actions/workflows/ci.yml/badge.svg)](https://github.com/Lakshya0257/tool-retriever/actions/workflows/ci.yml)
+[![CI](https://github.com/Lakshya0257/Tool-Retriever/actions/workflows/ci.yml/badge.svg)](https://github.com/Lakshya0257/Tool-Retriever/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 Stop sending your agent the entire tool manual. Send it the three tools it actually wants.

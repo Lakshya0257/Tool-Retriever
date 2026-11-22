@@ -22,11 +22,11 @@
   "author": "Lakshya Bhati",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Lakshya0257/tool-retriever.git"
+    "url": "git+https://github.com/Lakshya0257/Tool-Retriever.git"
   },
-  "homepage": "https://github.com/Lakshya0257/tool-retriever#readme",
+  "homepage": "https://github.com/Lakshya0257/Tool-Retriever#readme",
   "bugs": {
-    "url": "https://github.com/Lakshya0257/tool-retriever/issues"
+    "url": "https://github.com/Lakshya0257/Tool-Retriever/issues"
   },
   "type": "module",
   "sideEffects": false,
