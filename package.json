@@ -1,8 +1,59 @@
 {
   "name": "tool-retriever",
   "version": "0.1.0",
-  "description": "Send your agent only the tools it needs for the current step.",
+  "description": "Send your agent the few tools it needs for the current step, not the whole manual. Keyword, semantic and hybrid tool retrieval for any agent loop and MCP server.",
+  "keywords": [
+    "agent",
+    "agents",
+    "llm",
+    "tools",
+    "tool-calling",
+    "function-calling",
+    "tool-retrieval",
+    "mcp",
+    "model-context-protocol",
+    "bm25",
+    "embeddings",
+    "rag",
+    "openai",
+    "anthropic"
+  ],
+  "license": "MIT",
+  "author": "Lakshya Bhati",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Lakshya0257/tool-retriever.git"
+  },
+  "homepage": "https://github.com/Lakshya0257/tool-retriever#readme",
+  "bugs": {
+    "url": "https://github.com/Lakshya0257/tool-retriever/issues"
+  },
   "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "build": "tsup",
     "typecheck": "tsc --noEmit",
@@ -11,7 +62,8 @@
     "format:check": "prettier --check .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "coverage": "vitest run --coverage"
+    "coverage": "vitest run --coverage",
+    "prepublishOnly": "npm run typecheck && npm test && npm run build"
   },
   "peerDependencies": {
     "@modelcontextprotocol/sdk": ">=1.0.0"
