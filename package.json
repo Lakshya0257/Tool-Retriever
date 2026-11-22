@@ -15,8 +15,8 @@
     "bm25",
     "embeddings",
     "rag",
-    "openai",
-    "anthropic"
+    "ai-sdk",
+    "vercel-ai"
   ],
   "license": "MIT",
   "author": "Lakshya Bhati",

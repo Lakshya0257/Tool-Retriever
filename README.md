@@ -19,27 +19,47 @@ Agents get worse and more expensive as you hand them more tools. Wire up a few M
 
 ## Quick start
 
+### Vercel AI SDK
+
+Keep all your tools registered as usual. `activeToolsStep` plugs into `prepareStep` and narrows `activeTools` to the retrieved ones on every step, so the model only sees their schemas while every tool can still execute.
+
 ```ts
-import Anthropic from "@anthropic-ai/sdk";
-import { ToolRetriever, toAnthropicTools } from "tool-retriever";
+import { openai } from "@ai-sdk/openai";
+import { streamText, stepCountIs } from "ai";
+import { ToolRetriever, activeToolsStep, aiSdkRegistry } from "tool-retriever";
 
 const retriever = new ToolRetriever({
-  registry: tools,
+  registry: aiSdkRegistry(tools),
   topK: 3,
-  alwaysInclude: ["ask_human"],
+  alwaysInclude: ["askHuman"],
 });
 
-const selected = await retriever.select(userMessage);
-
-const response = await new Anthropic().messages.create({
-  model: "claude-sonnet-5-5",
-  max_tokens: 1024,
-  tools: toAnthropicTools(selected),
+const result = streamText({
+  model: openai("gpt-5"),
+  tools,
   messages,
+  stopWhen: stepCountIs(10),
+  prepareStep: activeToolsStep(retriever, tools),
 });
 ```
 
-`tools` can be any array in the common JSON-schema shape: `{ name, description, inputSchema }`, `{ name, description, input_schema }`, `{ name, description, parameters }`, or OpenAI's `{ type: "function", function: { ... } }`.
+- `aiSdkRegistry` reads each tool's description and input schema. Zod 4, `jsonSchema()` and lazy schemas are handled without importing `ai`; pass `toJsonSchema: (schema) => asSchema(schema).jsonSchema` for anything else.
+- The query defaults to the text of the latest user message. Pass `{ query: (messages) => ... }` to change it.
+- The selection is reused across steps while the query stays the same, so a multi-step tool loop costs one retrieval per user turn.
+- If there is no user text, `prepareStep` returns nothing and all tools stay active.
+- Returned names are typed as keys of your tool set. Tested against AI SDK 7.
+
+### Any other loop
+
+```ts
+import { ToolRetriever } from "tool-retriever";
+
+const retriever = new ToolRetriever({ registry: tools, topK: 3, alwaysInclude: ["ask_human"] });
+
+const selected = await retriever.select(userMessage);
+```
+
+`select` returns normalized `{ name, description, inputSchema }` tools. `tools` can be any array in the common JSON-schema shape: `{ name, description, inputSchema }`, `{ name, description, input_schema }`, `{ name, description, parameters }`, or OpenAI's `{ type: "function", function: { ... } }`.
 
 ## How it works
 
@@ -60,18 +80,13 @@ const response = await new Anthropic().messages.create({
 An embedder is any object with `embed(texts: string[]): Promise<number[][]>`, so you can use whichever provider you like:
 
 ```ts
-import OpenAI from "openai";
-import { ToolRetriever } from "tool-retriever";
-
-const openai = new OpenAI();
+import { embedMany } from "ai";
+import { ToolRetriever, aiSdkRegistry } from "tool-retriever";
 
 const retriever = new ToolRetriever({
-  registry: tools,
+  registry: aiSdkRegistry(tools),
   embedder: {
-    async embed(texts) {
-      const { data } = await openai.embeddings.create({ model: "text-embedding-3-small", input: texts });
-      return data.map((item) => item.embedding);
-    },
+    embed: async (values) => (await embedMany({ model: "openai/text-embedding-3-small", values })).embeddings,
   },
 });
 ```
@@ -121,19 +136,22 @@ The retriever decides what's relevant, never what's allowed. Authorization still
 
 Helpers:
 
-| Export                                      | Description                                               |
-| ------------------------------------------- | --------------------------------------------------------- |
-| `arrayRegistry(tools)`                      | Wraps a mutable array so `refresh()` picks up changes.    |
-| `mcpRegistry(client, { prefix?, filter? })` | Lists tools from any MCP client.                          |
-| `combineRegistries(...registries)`          | Merges registries. Duplicate tool names throw.            |
-| `bm25Ranker(options?)`                      | Keyword ranker with tunable `k1`, `b` and `fieldWeights`. |
-| `semanticRanker(embedder)`                  | Embedding ranker.                                         |
-| `hybridRanker([{ ranker, weight }, ...])`   | Weighted blend of any rankers.                            |
+| Export                                          | Description                                                |
+| ----------------------------------------------- | ---------------------------------------------------------- |
+| `aiSdkRegistry(tools, { toJsonSchema? })`       | Indexes a Vercel AI SDK tool set.                          |
+| `activeToolsStep(retriever, tools, { query? })` | A `prepareStep` function that sets `activeTools` per step. |
+| `arrayRegistry(tools)`                          | Wraps a mutable array so `refresh()` picks up changes.     |
+| `mcpRegistry(client, { prefix?, filter? })`     | Lists tools from any MCP client.                           |
+| `combineRegistries(...registries)`              | Merges registries. Duplicate tool names throw.             |
+| `bm25Ranker(options?)`                          | Keyword ranker with tunable `k1`, `b` and `fieldWeights`.  |
+| `semanticRanker(embedder)`                      | Embedding ranker.                                          |
+| `hybridRanker([{ ranker, weight }, ...])`       | Weighted blend of any rankers.                             |
 
 ## Roadmap
 
 - [x] Hybrid semantic + keyword ranking
 - [ ] Per-user tool-frequency priors
+- [x] Vercel AI SDK adapter
 - [ ] LangChain, LlamaIndex and OpenAI Agents adapters
 
 ## Contributing
