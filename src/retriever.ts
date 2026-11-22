@@ -27,6 +27,7 @@ export interface ToolRetrieverOptions {
 
 export interface SelectOptions {
   topK?: number;
+  includePinned?: boolean;
 }
 
 interface Index {
@@ -89,6 +90,7 @@ export class ToolRetriever {
       .filter(({ tool, score }) => !pinned.has(tool.name) && score > this.#minScore)
       .slice(0, topK)
       .map(({ tool }) => tool);
+    if (options.includePinned === false) return ranked;
     return [...ranked, ...tools.filter((tool) => pinned.has(tool.name))];
   }
 

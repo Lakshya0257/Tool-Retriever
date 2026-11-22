@@ -4,8 +4,17 @@ export {
   type ActiveToolsStep,
   type ActiveToolsStepOptions,
   type AiSdkMessageLike,
+  type AiSdkStepLike,
 } from "./ai-sdk/active-tools.js";
 export { aiSdkRegistry, type AiSdkRegistryOptions, type AiSdkToolLike } from "./ai-sdk/registry.js";
+export {
+  searchToolsTool,
+  type SearchToolsInput,
+  type SearchToolsOutput,
+  type SearchToolsSchema,
+  type SearchToolsTool,
+  type SearchToolsToolOptions,
+} from "./ai-sdk/search-tools.js";
 export { resolveJsonSchema, type JsonSchemaResolver } from "./ai-sdk/schema.js";
 export { normalizeTool, normalizeTools } from "./normalize.js";
 export { bm25Ranker, type Bm25Options } from "./rankers/bm25.js";
